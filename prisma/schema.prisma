@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  content   String
+  embedding Unsupported("vector(1536)")
+}
