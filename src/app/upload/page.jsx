@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 export default function PDFUpload() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({
-    type: "error",
+    type: "",
     text: "",
   });
 
@@ -82,12 +82,16 @@ export default function PDFUpload() {
                 </div>
               )}
 
-              {message && (
+              {message && message.type && (
                 <Alert
                   variant={message.type === "error" ? "destructive" : "default"}
                 >
                   <AlertTitle>
-                    {message.type === "error" ? "Error!" : "Success!"}
+                    {message.type === "error"
+                      ? "Error!"
+                      : message.type === "success"
+                        ? "Success!"
+                        : message.type}
                   </AlertTitle>
                   <AlertDescription>{message.text}</AlertDescription>
                 </Alert>

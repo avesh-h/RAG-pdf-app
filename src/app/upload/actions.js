@@ -1,6 +1,7 @@
 "use server";
 
 import { chunkText } from "@/lib/chunking";
+import prisma from "@/lib/db-config";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { extractText } from "unpdf";
 
@@ -22,7 +23,22 @@ export async function processPdfFile(formData) {
     const chunks = chunkText(text);
     const embeddings = await generateEmbeddings(chunks);
 
-    console.log("embeddings", embeddings);
+    // Store in DB — format embedding as Postgres vector string "[0.1, 0.2, ...]"
+    const records = chunks.map((chunk, index) => ({
+      content: chunk,
+      embedding: `[${embeddings[index].join(",")}]`, // ✅ Postgres vector format
+    }));
+
+    // Prisma doesn't support Unsupported() in create, use raw query
+    await Promise.all(
+      records.map(
+        (record) =>
+          prisma.$executeRaw`
+          INSERT INTO "Document" (content, embedding)
+          VALUES (${record.content}, ${record.embedding}::vector)
+        `,
+      ),
+    );
 
     return { success: true, message: "PDF file processed successfully" };
   } catch (error) {
