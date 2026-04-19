@@ -4,9 +4,16 @@ import { chunkText } from "@/lib/chunking";
 import prisma from "@/lib/db-config";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { extractText } from "unpdf";
+import { auth } from "@/auth";
 
 export async function processPdfFile(formData) {
   try {
+    // Get current logged in user
+    const session = await auth();
+
+    if (!session || !session.user) {
+      return { success: false, error: "You must be logged in to upload files" };
+    }
     const file = formData.get("pdf");
     if (!file) return { success: false, error: "No file provided" };
 
@@ -23,19 +30,21 @@ export async function processPdfFile(formData) {
     const chunks = chunkText(text);
     const embeddings = await generateEmbeddings(chunks);
 
-    // Store in DB — format embedding as Postgres vector string "[0.1, 0.2, ...]"
-    const records = chunks.map((chunk, index) => ({
-      content: chunk,
-      embedding: `[${embeddings[index].join(",")}]`, // ✅ Postgres vector format
-    }));
+    // Step 1 — Create a File record first linked to this user
+    const fileRecord = await prisma.file.create({
+      data: {
+        filename: file.name,
+        userId: session.user.id,
+      },
+    });
 
-    // Prisma doesn't support Unsupported() in create, use raw query
+    // Step 2 — Store all chunks linked to that File
     await Promise.all(
-      records.map(
-        (record) =>
+      chunks.map(
+        (chunk, index) =>
           prisma.$executeRaw`
-          INSERT INTO "Document" (content, embedding)
-          VALUES (${record.content}, ${record.embedding}::vector)
+          INSERT INTO "Document" (content, embedding, "fileId")
+          VALUES (${chunk}, ${`[${embeddings[index].join(",")}]`}::vector, ${fileRecord.id})
         `,
       ),
     );

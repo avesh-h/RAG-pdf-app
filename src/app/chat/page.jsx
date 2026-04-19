@@ -1,82 +1,95 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import { useChat } from "@ai-sdk/react";
-import {
-  Conversation,
-  ConversationContent,
-  ConversationScrollButton,
-} from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
-import { Response } from "@/components/ai-elements/response";
-import { Loader } from "@/components/ai-elements/loader";
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-} from "@/components/ai-elements/prompt-input";
+import { useState, useEffect } from "react";
+import { getUserFiles, deleteFile } from "@/actions/files";
+import ChatWindow from "@/components/chat/ChatWindow";
 
-export default function RAGChatBot() {
-  const [input, setInput] = useState("");
-  const { messages, sendMessage, status } = useChat();
+export default function ChatPage() {
+  const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (message) => {
-    if (!message.text) {
-      return;
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
+  async function loadFiles() {
+    setLoading(true);
+    const result = await getUserFiles();
+    if (result.success) {
+      setFiles(result.files);
     }
-    sendMessage({
-      text: message.text,
-    });
-    setInput("");
-  };
+    setLoading(false);
+  }
+
+  async function handleDelete(fileId) {
+    const result = await deleteFile(fileId);
+    if (result.success) {
+      // If deleted file was selected, clear selection
+      if (selectedFile?.id === fileId) {
+        setSelectedFile(null);
+      }
+      loadFiles();
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading your files...</div>;
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 relative size-full h-[calc(100vh-4rem)]">
-      <div className="flex flex-col h-full">
-        <Conversation className="h-full">
-          <ConversationContent>
-            {messages.map((message) => (
-              <div key={message.id}>
-                {message.parts.map((part, i) => {
-                  switch (part.type) {
-                    case "text":
-                      return (
-                        <Fragment key={`${message.id}-${i}`}>
-                          <Message from={message.role}>
-                            <MessageContent>
-                              <Response>{part.text}</Response>
-                            </MessageContent>
-                          </Message>
-                        </Fragment>
-                      );
-                    default:
-                      return null;
-                  }
-                })}
+    <div className="flex h-[calc(100vh-4rem)]">
+      {/* Left sidebar — file list */}
+      <div className="w-72 border-r flex flex-col p-4 gap-3">
+        <h2 className="font-semibold text-lg">Your Files</h2>
+
+        {files.length === 0 ? (
+          <div className="text-sm text-gray-500 mt-4">
+            No files uploaded yet. Go to the upload page to add a PDF.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {files.map((file) => (
+              <div
+                key={file.id}
+                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border transition-all ${
+                  selectedFile?.id === file.id
+                    ? "bg-blue-50 border-blue-400"
+                    : "hover:bg-gray-50 border-transparent"
+                }`}
+              >
+                <div
+                  className="flex-1 min-w-0"
+                  onClick={() => setSelectedFile(file)}
+                >
+                  <p className="text-sm font-medium truncate">
+                    {file.filename}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(file.uploadedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(file.id)}
+                  className="text-red-400 hover:text-red-600 text-xs ml-2 flex-shrink-0"
+                >
+                  Delete
+                </button>
               </div>
             ))}
-            {(status === "submitted" || status === "streaming") && <Loader />}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+          </div>
+        )}
+      </div>
 
-        <PromptInput onSubmit={handleSubmit} className="mt-4">
-          <PromptInputBody>
-            <PromptInputTextarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-          </PromptInputBody>
-          <PromptInputToolbar>
-            <PromptInputTools>
-              {/* Model selector, web search, etc. */}
-            </PromptInputTools>
-            <PromptInputSubmit disabled={!input && !status} status={status} />
-          </PromptInputToolbar>
-        </PromptInput>
+      {/* Right side — chat window */}
+      <div className="flex-1">
+        {selectedFile ? (
+          <ChatWindow file={selectedFile} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            Select a file from the left to start chatting
+          </div>
+        )}
       </div>
     </div>
   );

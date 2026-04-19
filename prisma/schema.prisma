@@ -7,8 +7,33 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String     @id @unique @default(cuid())
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+  files     File[]
+  documents Document[]
+}
+
+// THis is how we defined the relationship in prisma like userId we want to store the string format document id of other table.
+// Next field name user is we refer to the other table User and defined relation with fields and references.
+// onDelete cascade is when we delete the user delete the files of this user aswell.
+model File {
+  id         String     @id @default(cuid())
+  filename   String
+  uploadedAt DateTime   @default(now())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents  Document[]
+}
+
 model Document {
   id        Int                        @id @default(autoincrement())
   content   String
   embedding Unsupported("vector(384)")
+  fileId    String
+  file      File                       @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user      User?                      @relation(fields: [userId], references: [id])
+  userId    String?
 }
