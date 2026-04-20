@@ -8,6 +8,9 @@ export const authConfig = {
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
+      console.log("=== AUTH CONFIG DEBUG ===");
+      console.log("auth:", auth);
+      console.log("nextUrl:", nextUrl);
       const isLoggedIn = !!auth?.user;
       const isAuthPage =
         nextUrl.pathname.startsWith("/login") ||
