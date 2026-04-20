@@ -23,16 +23,15 @@ export default function LoginPage() {
         password: formData.get("password"),
         redirect: false,
       });
-      console.log("resssss11111", result);
 
       if (result?.error) {
         setError("Invalid email or password");
         setLoading(false);
         return;
       }
-      console.log("resssss222222", result);
       setLoading(false);
 
+      router.refresh();
       router.push("/upload");
     } catch (error) {
       setError("An error occurred. Please try again.");
