@@ -15,21 +15,29 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const formData = new FormData(e.target);
+    try {
+      const formData = new FormData(e.target);
 
-    const result = await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      redirect: false,
-    });
+      const result = await signIn("credentials", {
+        email: formData.get("email"),
+        password: formData.get("password"),
+        redirect: false,
+      });
+      console.log("resssss11111", result);
 
-    if (result?.error) {
-      setError("Invalid email or password");
+      if (result?.error) {
+        setError("Invalid email or password");
+        setLoading(false);
+        return;
+      }
+      console.log("resssss222222", result);
       setLoading(false);
-      return;
-    }
 
-    router.push("/upload");
+      router.push("/upload");
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (

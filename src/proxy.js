@@ -7,6 +7,17 @@ export async function proxy(req) {
     secret: process.env.AUTH_SECRET,
   });
 
+  console.log("=== PROXY DEBUG ===");
+  console.log("URL:", req.nextUrl.pathname);
+  console.log("AUTH_SECRET exists:", !!process.env.AUTH_SECRET);
+  console.log("AUTH_SECRET value:", process.env.AUTH_SECRET);
+  console.log("Token:", token);
+  console.log(
+    "Cookies:",
+    req.cookies.getAll().map((c) => c.name),
+  );
+  console.log("===================");
+
   const isLoggedIn = !!token;
 
   const isAuthPage =
