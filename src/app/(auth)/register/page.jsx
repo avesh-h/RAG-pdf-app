@@ -30,9 +30,9 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto mt-20 p-6">
-      <h1 className="text-2xl font-bold mb-6">Register</h1>
+      <h1 className="text-2xl font-bold mb-6 text-foreground">Register</h1>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {error && <p className="text-destructive mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
@@ -40,27 +40,27 @@ export default function RegisterPage() {
           name="email"
           placeholder="Email"
           required
-          className="border p-2 rounded"
+          className="border border-border bg-input text-foreground p-2 rounded-md"
         />
         <input
           type="password"
           name="password"
           placeholder="Password"
           required
-          className="border p-2 rounded"
+          className="border border-border bg-input text-foreground p-2 rounded-md"
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-500 text-white p-2 rounded"
+          className="bg-primary text-primary-foreground p-2 rounded-md hover:bg-primary/90 transition-colors"
         >
           {loading ? "Registering..." : "Register"}
         </button>
       </form>
 
-      <p className="mt-4 text-sm">
+      <p className="mt-4 text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-500">
+        <Link href="/login" className="text-primary hover:text-primary/80">
           Login
         </Link>
       </p>

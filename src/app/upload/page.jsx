@@ -53,16 +53,16 @@ export default function PDFUpload() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-[calc(100vh-4rem)] bg-background py-8 md:py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-center text-foreground">
           PDF Upload
         </h1>
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="pdf-upload">Upload PDF File</Label>
+                <Label htmlFor="pdf-upload" className="text-foreground">Upload PDF File</Label>
                 <Input
                   id="pdf-upload"
                   type="file"
@@ -74,11 +74,9 @@ export default function PDFUpload() {
               </div>
 
               {isLoading && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="text-muted-foreground">
-                    Processing PDF...
-                  </span>
+                  <span>Processing PDF...</span>
                 </div>
               )}
 

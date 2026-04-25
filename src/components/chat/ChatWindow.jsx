@@ -41,10 +41,10 @@ export default function ChatWindow({ file }) {
   };
 
   return (
-    <div className="flex flex-col h-full p-6">
+    <div className="flex flex-col h-full p-4 md:p-6">
       {/* File name header */}
-      <div className="mb-4 pb-3 border-b">
-        <p className="text-sm text-gray-500">Chatting with</p>
+      <div className="mb-4 pb-3 border-b border-border">
+        <p className="text-sm text-muted-foreground">Chatting with</p>
         <p className="font-semibold truncate">{file.filename}</p>
       </div>
 
