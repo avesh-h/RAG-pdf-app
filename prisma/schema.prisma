@@ -19,6 +19,7 @@ model User {
 // THis is how we defined the relationship in prisma like userId we want to store the string format document id of other table.
 // Next field name user is we refer to the other table User and defined relation with fields and references.
 // onDelete cascade is when we delete the user delete the files of this user aswell.
+// Optional will work if it will receive in payload only then it store or it will keep the value as a null.
 model File {
   id         String     @id @default(cuid())
   filename   String
@@ -36,4 +37,6 @@ model Document {
   file      File                       @relation(fields: [fileId], references: [id], onDelete: Cascade)
   user      User?                      @relation(fields: [userId], references: [id])
   userId    String?
+
+  @@index([fileId])
 }
