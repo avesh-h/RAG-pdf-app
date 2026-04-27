@@ -44,10 +44,22 @@ export default function Navbar() {
         >
           Upload
         </Link>
+        <Link
+          href="/ai-search"
+          className={`text-sm font-medium transition-colors ${
+            pathname.startsWith("/ai-search")
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          AI Search
+        </Link>
       </div>
 
       <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">
-        <span className="font-semibold text-base tracking-tight">RAG PDF Chat</span>
+        <span className="font-semibold text-base tracking-tight">
+          RAG PDF Chat
+        </span>
       </div>
 
       {session?.user && (
