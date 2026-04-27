@@ -32,7 +32,7 @@ export default function LoginPage() {
       setLoading(false);
 
       router.refresh();
-      router.push("/upload");
+      router.push("/chat");
     } catch (error) {
       setError("An error occurred. Please try again.");
       setLoading(false);
