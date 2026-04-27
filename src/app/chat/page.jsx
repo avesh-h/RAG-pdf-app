@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getUserFiles, deleteFile } from "@/actions/files";
 import FileChat from "@/components/chat/FileChat";
+import UploadUI from "@/components/upload/UploadUI";
 
 export default function ChatPage() {
   const [files, setFiles] = useState([]);
@@ -27,6 +28,11 @@ export default function ChatPage() {
       if (selectedFile?.id === fileId) setSelectedFile(null);
       loadFiles();
     }
+  }
+
+  function handleFileUploaded(uploadedFile) {
+    setFiles((prev) => [uploadedFile, ...prev]);
+    setSelectedFile(uploadedFile);
   }
 
   function handleSelectFile(file) {
@@ -63,6 +69,16 @@ export default function ChatPage() {
       >
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-lg">Your Files</h2>
+          {selectedFile ? (
+            <button
+              className="text-muted-foreground text-sm hover:text-foreground p-1 cursor-pointer"
+              onClick={() => {
+                setSelectedFile(null);
+              }}
+            >
+              Unselect
+            </button>
+          ) : null}
           {/* Close button — mobile only */}
           <button
             className="md:hidden text-muted-foreground hover:text-foreground p-1"
@@ -88,15 +104,17 @@ export default function ChatPage() {
                 }`}
               >
                 <div
-                  className="flex-1 min-w-0"
+                  className="flex-1 min-w-0 flex gap-2 items-center"
                   onClick={() => handleSelectFile(file)}
                 >
-                  <p className="text-sm font-medium truncate">
-                    {file.filename}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(file.uploadedAt).toLocaleDateString()}
-                  </p>
+                  <div>
+                    <p className="text-sm font-medium truncate">
+                      {file.filename}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(file.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => handleDelete(file.id)}
@@ -118,11 +136,23 @@ export default function ChatPage() {
             onClick={() => setSidebarOpen(true)}
             className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span className="text-lg">☰</span>
-            <span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="truncate max-w-[180px]">
               {selectedFile ? selectedFile.filename : "Select a file"}
             </span>
           </button>
+          {selectedFile && (
+            <button
+              onClick={() => setSelectedFile(null)}
+              className="text-muted-foreground hover:text-foreground text-sm ml-auto"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Chat content */}
@@ -130,22 +160,7 @@ export default function ChatPage() {
           {selectedFile ? (
             <FileChat file={selectedFile} />
           ) : (
-            <div className="flex items-center justify-center h-full p-4 text-center text-muted-foreground text-sm">
-              <div>
-                <p className="mb-2">No file selected</p>
-                {/* Mobile hint */}
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="md:hidden text-primary text-sm underline"
-                >
-                  Tap here to choose a file
-                </button>
-                {/* Desktop hint */}
-                <p className="hidden md:block">
-                  Select a file from the left to start chatting
-                </p>
-              </div>
-            </div>
+            <UploadUI onSuccess={handleFileUploaded} />
           )}
         </div>
       </div>

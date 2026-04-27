@@ -49,7 +49,15 @@ export async function processPdfFile(formData) {
       ),
     );
 
-    return { success: true, message: "PDF file processed successfully" };
+    return { 
+      success: true, 
+      file: {
+        id: fileRecord.id,
+        filename: fileRecord.filename,
+        uploadedAt: fileRecord.uploadedAt.toISOString()
+      }, 
+      message: "PDF file processed successfully" 
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }

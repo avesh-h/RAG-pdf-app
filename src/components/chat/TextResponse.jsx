@@ -21,7 +21,7 @@ export function TextResponse({ children }) {
             </h3>
           ),
           p: ({ children }) => (
-            <p className="text-foreground leading-7 my-2">{children}</p>
+            <p className="text-foreground leading-normal">{children}</p>
           ),
           ul: ({ children }) => (
             <ul className="my-3 space-y-1.5 ml-2">{children}</ul>
