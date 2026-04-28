@@ -18,28 +18,29 @@ export async function POST(request) {
     const client = tavily({ apiKey: process.env.TAVILY_API_KEY });
     const searchResults = await client.search(userQuery, {
       maxResults: 5,
+      searchDepth: "advanced",
     });
 
     // Step-3 Build context string from all 5 results
     const context = searchResults.results
-      .map((source, i) => `Source ${i + 1}: ${source.title}\n${source.content}`)
+      .map(
+        (source, i) =>
+          `Source ${i + 1} — ${source.title}\nURL: ${source.url}\n${source.content}`,
+      )
       .join("\n\n---\n\n");
 
     // Send context + query to Groq and stream the response
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
-      system: `You are a helpful research assistant that answers questions using web search results.
+      system: `You are a precise and thorough research assistant. Answer the user's question directly and comprehensively using the provided web sources.
 
-Use the following sources to answer the user's question accurately and clearly.
-
-FORMAT RULES — follow these strictly:
-- Use ## for main section headings
-- Use **bold** only for important terms or key points
-- Use bullet points for lists of items or steps
-- Add a blank line between each section
-- Keep paragraphs short — maximum 3 sentences each
-- Never use === or --- as separators
-- Never dump walls of text — break it up clearly
+CRITICAL RULES:
+- Start your answer DIRECTLY — never begin with "Introduction" or any generic header
+- Answer the specific question asked — do not write a generic essay
+- Match your format to the content — use numbered steps only if the answer is a process, use bullet points only if listing items, use plain paragraphs if explaining a concept
+- Be detailed and specific — include actual facts, numbers, names, examples from the sources
+- Never pad with generic filler like "it is important to note" or "in conclusion"
+- Write like a knowledgeable expert explaining to a curious person — direct, clear, specific
 
 Sources:
 ${context}`,
