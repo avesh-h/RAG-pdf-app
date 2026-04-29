@@ -9,27 +9,27 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
-      
-      // Public routes - accessible to all users
-      const isPublicRoute = pathname === "/" || pathname === "/login" || pathname === "/register";
-      
-      // If on public route, allow access for everyone
-      if (isPublicRoute) {
-        return true;
-      }
 
-      // If logged in and on auth page, redirect to chat
-      if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
+      const isAuthPage = pathname === "/login" || pathname === "/register";
+
+      const isProtected =
+        pathname.startsWith("/chat") ||
+        pathname.startsWith("/upload") ||
+        pathname.startsWith("/files");
+
+      // logged in user should not see login/register
+      if (isLoggedIn && isAuthPage) {
         return Response.redirect(new URL("/chat", nextUrl));
       }
 
-      // If not logged in and not on public route, deny access (middleware will redirect)
-      if (!isLoggedIn) {
+      // protected route but not logged in
+      if (!isLoggedIn && isProtected) {
         return false;
       }
 
       return true;
     },
   },
+
   providers: [],
 };
