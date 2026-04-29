@@ -9,17 +9,21 @@ const { auth } = NextAuth({
 export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
+  const pathname = nextUrl.pathname;
 
-  // If user is NOT logged in → redirect to login
-  if (!isLoggedIn && nextUrl.pathname !== "/login") {
+  // Public routes - allow all users immediately
+  const publicRoutes = ["/", "/login", "/register"];
+  if (publicRoutes.includes(pathname)) {
+    return; // No redirect, allow access
+  }
+
+  // Protected routes - redirect to login if not logged in
+  if (!isLoggedIn) {
     return Response.redirect(new URL("/login", nextUrl));
   }
 
-  // If logged in user tries to visit login/register
-  if (
-    isLoggedIn &&
-    (nextUrl.pathname === "/login" || nextUrl.pathname === "/register")
-  ) {
+  // Logged in users shouldn't access login/register
+  if (pathname === "/login" || pathname === "/register") {
     return Response.redirect(new URL("/chat", nextUrl));
   }
 });

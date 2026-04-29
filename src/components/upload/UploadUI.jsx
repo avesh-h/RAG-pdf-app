@@ -20,17 +20,13 @@ export default function UploadUI({ onSuccess }) {
       setMessage({ type: "error", text: "Please select a PDF file" });
       return;
     }
-
     setIsLoading(true);
     setMessage(null);
     setSelectedFile(file);
-
     try {
       const formData = new FormData();
       formData.append("pdf", file);
-
       const result = await processPdfFile(formData);
-
       if (result.success) {
         setMessage({ type: "success", text: result.message });
         onSuccess?.(result.file);
@@ -41,7 +37,10 @@ export default function UploadUI({ onSuccess }) {
       }
     } catch (err) {
       console.error("Error processing PDF:", err);
-      setMessage({ type: "error", text: "An error occurred while processing the PDF" });
+      setMessage({
+        type: "error",
+        text: "An error occurred while processing the PDF",
+      });
       setSelectedFile(null);
     } finally {
       setIsLoading(false);
@@ -51,11 +50,8 @@ export default function UploadUI({ onSuccess }) {
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
   const handleDrop = (e) => {
@@ -80,19 +76,31 @@ export default function UploadUI({ onSuccess }) {
   return (
     <div className="bg-background py-8 md:py-12 px-4">
       <div className="max-w-xl mx-auto">
+        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Upload PDF</h1>
-          <p className="text-muted-foreground">Upload a PDF file to start chatting with it</p>
+          <h1
+            className="text-2xl md:text-3xl font-bold mb-2"
+            style={{ color: "var(--brand-fg)" }}
+          >
+            Upload PDF
+          </h1>
+          <p className="text-sm" style={{ color: "var(--brand-primary)" }}>
+            Upload a PDF file to start chatting with it
+          </p>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden border-border">
           <CardContent className="p-0">
             <div
-              className={`
-                relative border-2 border-dashed rounded-lg m-4 transition-all duration-200
-                ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50"}
-                ${isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              `}
+              className={`relative border-2 border-dashed rounded-lg m-4 transition-all duration-200 ${
+                isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"
+              }`}
+              style={{
+                borderColor: dragActive ? "var(--brand-primary)" : undefined,
+                backgroundColor: dragActive
+                  ? "color-mix(in srgb, var(--brand-primary) 5%, transparent)"
+                  : undefined,
+              }}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -109,25 +117,59 @@ export default function UploadUI({ onSuccess }) {
               />
 
               <div className="flex flex-col items-center justify-center py-10 px-4">
-                {isLoading ? (
+                {/* State: loading */}
+                {isLoading && (
                   <div className="flex flex-col items-center gap-4">
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-full border-4 border-primary/20"></div>
-                      <Loader2 className="absolute inset-0 w-20 h-20 text-primary animate-spin" />
+                    <div className="relative w-20 h-20">
+                      <div
+                        className="absolute inset-0 rounded-full border-4"
+                        style={{
+                          borderColor:
+                            "color-mix(in srgb, var(--brand-primary) 20%, transparent)",
+                        }}
+                      />
+                      <Loader2
+                        className="absolute inset-0 w-20 h-20 animate-spin"
+                        style={{ color: "var(--brand-primary)" }}
+                      />
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-medium text-foreground">Processing PDF...</p>
-                      <p className="text-sm text-muted-foreground mt-1">Extracting text and creating embeddings</p>
+                      <p
+                        className="text-lg font-medium"
+                        style={{ color: "var(--brand-fg)" }}
+                      >
+                        Processing PDF...
+                      </p>
+                      <p className="text-sm mt-1 text-muted-foreground">
+                        Extracting text and creating embeddings
+                      </p>
                     </div>
                   </div>
-                ) : selectedFile ? (
+                )}
+
+                {/* State: file selected */}
+                {!isLoading && selectedFile && (
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                      <FileText className="w-10 h-10 text-primary" />
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center"
+                      style={{
+                        background:
+                          "color-mix(in srgb, var(--brand-primary) 10%, transparent)",
+                      }}
+                    >
+                      <FileText
+                        className="w-10 h-10"
+                        style={{ color: "var(--brand-primary)" }}
+                      />
                     </div>
                     <div className="text-center">
-                      <p className="font-medium text-foreground truncate max-w-[250px]">{selectedFile.name}</p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p
+                        className="font-medium truncate max-w-[250px]"
+                        style={{ color: "var(--brand-fg)" }}
+                      >
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-sm mt-1 text-muted-foreground">
                         {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
@@ -135,24 +177,37 @@ export default function UploadUI({ onSuccess }) {
                       variant="outline"
                       size="sm"
                       onClick={removeFile}
-                      className="mt-2"
+                      className="mt-2 hover:border-[--brand-primary]"
                     >
                       <X className="w-4 h-4 mr-1" />
                       Remove
                     </Button>
                   </div>
-                ) : (
+                )}
+
+                {/* State: idle / empty */}
+                {!isLoading && !selectedFile && (
                   <div className="flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center transition-transform hover:scale-110">
                       <Upload className="w-10 h-10 text-muted-foreground" />
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-medium text-foreground">
+                      <p
+                        className="text-lg font-medium"
+                        style={{ color: "var(--brand-fg)" }}
+                      >
                         Drag & drop your PDF here
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">or click to browse</p>
+                      <p className="text-sm mt-1 text-muted-foreground">
+                        or click to browse
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">Only PDF files are supported</p>
+                    <p
+                      className="text-xs mt-2"
+                      style={{ color: "var(--brand-primary)" }}
+                    >
+                      Only PDF files are supported
+                    </p>
                   </div>
                 )}
               </div>
@@ -160,13 +215,35 @@ export default function UploadUI({ onSuccess }) {
           </CardContent>
         </Card>
 
+        {/* Alert */}
         {message && (
           <Alert
             variant={message.type === "error" ? "destructive" : "default"}
             className="mt-4"
+            style={
+              message.type === "success"
+                ? {
+                    borderColor:
+                      "color-mix(in srgb, var(--brand-primary) 40%, transparent)",
+                    backgroundColor:
+                      "color-mix(in srgb, var(--brand-primary) 6%, transparent)",
+                  }
+                : {}
+            }
           >
-            {message.type === "success" && <CheckCircle className="h-4 w-4" />}
-            <AlertTitle>
+            {message.type === "success" && (
+              <CheckCircle
+                className="h-4 w-4"
+                style={{ color: "var(--brand-primary)" }}
+              />
+            )}
+            <AlertTitle
+              style={
+                message.type === "success"
+                  ? { color: "var(--brand-primary)" }
+                  : {}
+              }
+            >
               {message.type === "error" ? "Error" : "Success"}
             </AlertTitle>
             <AlertDescription>{message.text}</AlertDescription>

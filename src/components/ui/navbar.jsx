@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 
 const navLinks = [
   { href: "/chat", label: "Chat" },
-  // { href: "/upload", label: "Upload" },
   { href: "/ai-search", label: "AI Search" },
 ];
 
@@ -34,17 +33,16 @@ export default function Navbar() {
 
   return (
     <nav className="w-full border-b border-border bg-card px-4 py-3 flex items-center justify-between relative">
+      {/* ── Left: mobile hamburger + desktop nav links ── */}
       <div className="flex items-center gap-4">
-        <Link
-          href="#"
-          className="md:hidden text-sm font-medium text-muted-foreground hover:text-foreground"
-          onClick={(e) => {
-            e.preventDefault();
-            setMobileMenuOpen(!mobileMenuOpen);
-          }}
+        {/* Hamburger — mobile only */}
+        <button
+          className="md:hidden text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -65,16 +63,17 @@ export default function Navbar() {
               />
             )}
           </svg>
-        </Link>
+        </button>
 
-        <div className="hidden md:flex items-center gap-4">
+        {/* Desktop nav links */}
+        <div className="hidden md:flex items-center gap-5">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={`text-sm font-medium transition-colors ${
                 pathname.startsWith(link.href)
-                  ? "text-primary"
+                  ? "text-[#a3e635]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -84,23 +83,34 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* ── Center: Logo ── */}
       <div className="absolute left-1/2 -translate-x-1/2">
-        <span className="text-sm sm:text-base font-semibold tracking-tight">
-          Sift-ai
-        </span>
+        <Link
+          href="/"
+          className="text-sm sm:text-base font-medium hover:opacity-80 transition-opacity text-foreground"
+          style={{ fontFamily: "var(--font-dm-mono)" }}
+        >
+          sift<span style={{ color: "#a3e635" }}>.</span>ai
+        </Link>
       </div>
 
+      {/* ── Right: auth area ── */}
       {status === "loading" ? (
         <div className="w-7 h-7 rounded-full bg-muted animate-pulse" />
       ) : session ? (
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-[#a3e635] transition-colors cursor-pointer"
           >
-            <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+            {/* Avatar circle */}
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-black"
+              style={{ background: "#a3e635" }}
+            >
               {session.user.email?.charAt(0).toUpperCase()}
             </div>
+            {/* Chevron */}
             <svg
               className={`w-3 h-3 transition-transform hidden sm:block ${userMenuOpen ? "rotate-180" : ""}`}
               fill="none"
@@ -116,11 +126,15 @@ export default function Navbar() {
             </svg>
           </button>
 
+          {/* Dropdown */}
           {userMenuOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-popover border border-border rounded-lg shadow-lg py-1 z-50">
               <div className="px-4 py-2 border-b border-border">
                 <p className="text-xs text-muted-foreground">Signed in as</p>
-                <p className="text-sm font-medium truncate">
+                <p
+                  className="text-sm font-medium truncate"
+                  style={{ color: "#a3e635" }}
+                >
                   {session.user.email}
                 </p>
               </div>
@@ -132,7 +146,7 @@ export default function Navbar() {
                     onClick={() => setUserMenuOpen(false)}
                     className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                       pathname.startsWith(link.href)
-                        ? "text-primary bg-accent"
+                        ? "bg-accent text-[#a3e635]"
                         : "text-foreground hover:bg-accent"
                     }`}
                   >
@@ -154,21 +168,22 @@ export default function Navbar() {
       ) : (
         <Link
           href="/login"
-          className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="text-sm font-medium text-muted-foreground hover:text-[#a3e635] transition-colors"
         >
           Sign In
         </Link>
       )}
 
+      {/* ── Mobile menu dropdown ── */}
       {mobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-card border-b border-border p-4 flex flex-col gap-3 z-50 md:hidden shadow-lg">
+        <div className="absolute top-full left-0 right-0 bg-card border-b border-border px-4 py-4 flex flex-col gap-3 z-50 md:hidden shadow-lg">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={`text-base font-medium transition-colors ${
                 pathname.startsWith(link.href)
-                  ? "text-primary"
+                  ? "text-[#a3e635]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -178,10 +193,18 @@ export default function Navbar() {
           {!session && (
             <Link
               href="/login"
-              className="text-base font-medium text-muted-foreground hover:text-foreground"
+              className="text-base font-medium text-muted-foreground hover:text-[#a3e635] transition-colors"
             >
               Sign In
             </Link>
+          )}
+          {session && (
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="text-left text-base font-medium text-destructive"
+            >
+              Logout
+            </button>
           )}
         </div>
       )}

@@ -34,6 +34,42 @@ const montserrat = localFont({
   variable: "--font-montserrat",
 });
 
+const dmMono = localFont({
+  src: [
+    {
+      path: "../../public/fonts/DMMono-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/DMMono-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/DMMono-Italic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../public/fonts/DMMono-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/DMMono-LightItalic.ttf",
+      weight: "300",
+      style: "italic",
+    },
+    {
+      path: "../../public/fonts/DMMono-MediumItalic.ttf",
+      weight: "500",
+      style: "italic",
+    },
+  ],
+  variable: "--font-dm-mono",
+});
+
 export const metadata = {
   title: "Sift-ai",
   description:
@@ -44,7 +80,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
       <body
-        className={`${montserrat.variable} bg-background text-foreground font-sans`}
+        className={`${montserrat.variable} ${dmMono.variable} bg-background text-foreground font-sans`}
       >
         <SessionProvider>
           <Navbar />

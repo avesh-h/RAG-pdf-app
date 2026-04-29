@@ -8,16 +8,24 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isAuthPage =
-        nextUrl.pathname.startsWith("/login") ||
-        nextUrl.pathname.startsWith("/register");
-
-      if (isLoggedIn && isAuthPage) {
-        return Response.redirect(new URL("/upload", nextUrl));
+      const pathname = nextUrl.pathname;
+      
+      // Public routes - accessible to all users
+      const isPublicRoute = pathname === "/" || pathname === "/login" || pathname === "/register";
+      
+      // If on public route, allow access for everyone
+      if (isPublicRoute) {
+        return true;
       }
 
-      if (!isLoggedIn && !isAuthPage) {
-        return Response.redirect(new URL("/login", nextUrl));
+      // If logged in and on auth page, redirect to chat
+      if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
+        return Response.redirect(new URL("/chat", nextUrl));
+      }
+
+      // If not logged in and not on public route, deny access (middleware will redirect)
+      if (!isLoggedIn) {
+        return false;
       }
 
       return true;
