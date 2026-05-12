@@ -1,9 +1,11 @@
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export function TextResponse({ children }) {
   return (
     <div className="text-sm text-foreground leading-7 space-y-3">
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
             <h1 className="text-xl font-bold mt-6 mb-3 text-foreground">
@@ -57,6 +59,26 @@ export function TextResponse({ children }) {
             <blockquote className="border-l-2 border-primary pl-4 my-3 text-muted-foreground italic">
               {children}
             </blockquote>
+          ),
+          table: ({ children }) => (
+            <div className="my-4 overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-sm border-collapse">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-muted text-foreground">{children}</thead>
+          ),
+          tbody: ({ children }) => (
+            <tbody className="divide-y divide-border">{children}</tbody>
+          ),
+          tr: ({ children }) => <tr className="divide-x divide-border">{children}</tr>,
+          th: ({ children }) => (
+            <th className="px-4 py-2 text-left font-semibold text-foreground">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="px-4 py-2 text-foreground">{children}</td>
           ),
         }}
       >

@@ -1,5 +1,5 @@
-const CHUNK_SIZE = 200; // ✅ characters not words
-const CHUNK_OVERLAP = 20; // ✅ overlap in characters
+const CHUNK_SIZE = 800; // characters — large enough to keep related sentences together
+const CHUNK_OVERLAP = 100; // overlap so content at boundaries isn't lost
 
 export function chunkText(text) {
   // Clean up extra whitespace first

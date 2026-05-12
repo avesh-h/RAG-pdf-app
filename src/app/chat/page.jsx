@@ -110,7 +110,7 @@ export default function ChatPage() {
                   className="flex-1 min-w-0 flex gap-2 items-center"
                   onClick={() => handleSelectFile(file)}
                 >
-                  <div>
+                  <div className="min-w-0 overflow-hidden">
                     <p className="text-sm font-medium truncate">
                       {file.filename}
                     </p>

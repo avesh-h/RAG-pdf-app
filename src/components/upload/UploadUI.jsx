@@ -14,10 +14,19 @@ export default function UploadUI({ onSuccess }) {
   const [message, setMessage] = useState(null);
   const inputRef = useRef(null);
 
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
   const handleFileUpload = async (file) => {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       setMessage({ type: "error", text: "Please select a PDF file" });
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setMessage({
+        type: "error",
+        text: `File is too large (${(file.size / 1024 / 1024).toFixed(2)} MB). Maximum allowed size is 2 MB.`,
+      });
       return;
     }
     setIsLoading(true);
@@ -37,9 +46,14 @@ export default function UploadUI({ onSuccess }) {
       }
     } catch (err) {
       console.error("Error processing PDF:", err);
+      const isBodyLimit =
+        err?.message?.toLowerCase().includes("body exceeded") ||
+        err?.message?.toLowerCase().includes("size limit");
       setMessage({
         type: "error",
-        text: "An error occurred while processing the PDF",
+        text: isBodyLimit
+          ? "File is too large. Maximum allowed size is 2 MB."
+          : "An error occurred while processing the PDF",
       });
       setSelectedFile(null);
     } finally {
@@ -206,7 +220,7 @@ export default function UploadUI({ onSuccess }) {
                       className="text-xs mt-2"
                       style={{ color: "var(--brand-primary)" }}
                     >
-                      Only PDF files are supported
+                      Only PDF files are supported · Max 2 MB
                     </p>
                   </div>
                 )}
