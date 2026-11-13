@@ -1,61 +1,43 @@
-// import { openai } from "@ai-sdk/openai";
-// import { embed, embedMany } from "ai";
-import { InferenceClient } from "@huggingface/inference";
+import { pipeline } from "@xenova/transformers";
 
-// const EMBEDDING_MODEL = "text-embedding-3-small";
+const MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
 
-// // for single text to convert user query to vector embedding
-// export async function generateEmbedding(text) {
-//   const input = text.replace("\n", " ");
+// Singleton class to hold pipeline instance across server invocations
+class PipelineSingleton {
+  static task = "feature-extraction";
+  static model = MODEL_NAME;
+  static instance = null;
 
-//   const { embedding } = await embed({
-//     model: openai.textEmbeddingModel(EMBEDDING_MODEL),
-//     value: input,
-//   });
-
-//   return embedding;
-// }
-
-// // for multiple texts to convert user uploaded pdf smaller chunks to vector embeddings
-// export async function generateEmbeddings(texts) {
-//   const inputs = texts.map((text) => text.replace("\n", " "));
-
-//   const { embeddings } = await embedMany({
-//     model: openai.textEmbeddingModel(EMBEDDING_MODEL),
-//     values: inputs,
-//   });
-
-//   console.log("Embeddings generated:", embeddings);
-
-//   return embeddings;
-// }
-
-const client = new InferenceClient(process.env.HF_TOKEN);
-
-const EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
-
-// for single text to convert user query to vector embedding
-export async function generateEmbedding(text) {
-  const input = text.replace("\n", " ");
-
-  const result = await client.featureExtraction({
-    model: EMBEDDING_MODEL,
-    inputs: input,
-    provider: "hf-inference",
-  });
-
-  return Array.from(result);
+  static async getInstance() {
+    if (!this.instance) {
+      this.instance = await pipeline(this.task, this.model);
+    }
+    return this.instance;
+  }
 }
 
-// for multiple texts to convert PDF chunks to vector embeddings
-export async function generateEmbeddings(texts) {
-  const inputs = texts.map((text) => text.replace("\n", " "));
+// For single text to convert user query to vector embedding (384 dimensions)
+export async function generateEmbedding(text) {
+  const extractor = await PipelineSingleton.getInstance();
+  const input = text.replace(/\n/g, " ");
 
-  const result = await client.featureExtraction({
-    model: EMBEDDING_MODEL,
-    inputs: inputs,
-    provider: "hf-inference",
-  });
+  const output = await extractor(input, { pooling: "mean", normalize: true });
+  return Array.from(output.data);
+}
 
-  return result.map((embedding) => Array.from(embedding));
+// For multiple texts to convert PDF chunks to vector embeddings (384 dimensions each)
+export async function generateEmbeddings(texts, batchSize = 32) {
+  const extractor = await PipelineSingleton.getInstance();
+  const inputs = texts.map((text) => text.replace(/\n/g, " "));
+
+  if (inputs.length === 0) return [];
+
+  const results = [];
+  for (let i = 0; i < inputs.length; i += batchSize) {
+    const batch = inputs.slice(i, i + batchSize);
+    const output = await extractor(batch, { pooling: "mean", normalize: true });
+    results.push(...output.tolist());
+  }
+
+  return results;
 }

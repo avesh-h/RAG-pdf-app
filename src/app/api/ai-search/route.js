@@ -2,6 +2,8 @@ import { groq } from "@ai-sdk/groq";
 import { tavily } from "@tavily/core";
 import { streamText } from "ai";
 
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+
 // Helper: convert useChat message format → Groq format
 function normalizeMessages(messages) {
   return messages.map((m) => ({
@@ -20,7 +22,7 @@ async function detectIntent(normalizedMessages) {
   const recentMessages = normalizedMessages.slice(-4); // last 4 messages max
 
   const intentResult = streamText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq(GROQ_MODEL),
     system: `You are an intent classifier. Analyze the conversation and classify the LAST user message.
 
 Reply with ONLY a JSON object in this exact format, nothing else:
@@ -105,7 +107,7 @@ CRITICAL RULES:
 
     // Step 4 — Stream response with full conversation history
     const result = streamText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq(GROQ_MODEL),
       system: systemPrompt,
       messages: normalizedMessages, // full history, not just last message
     });

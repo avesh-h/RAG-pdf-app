@@ -180,7 +180,7 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-2 mb-6">
                 <FeatureChip label="Vector similarity search" />
                 <FeatureChip label="pgvector + NeonDB" />
-                <FeatureChip label="Llama 3.3 70B" />
+                <FeatureChip label="GPT OSS 120B" />
                 <FeatureChip label="Contextual chunking" />
               </div>
               <Link
@@ -326,7 +326,7 @@ export default function HomePage() {
               {
                 n: "04",
                 title: "Ground the LLM",
-                body: "Retrieved chunks are injected as context into the Groq Llama 3.3 70B prompt. The model answers strictly from your document — no fabrication.",
+                body: "Retrieved chunks are injected as context into the Groq GPT OSS 120B prompt. The model answers strictly from your document — no fabrication.",
               },
               {
                 n: "05",

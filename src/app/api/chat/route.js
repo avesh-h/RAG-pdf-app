@@ -2,6 +2,8 @@ import { searchDocuments } from "@/lib/search";
 import { groq } from "@ai-sdk/groq";
 import { streamText } from "ai";
 
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+
 function normalizeMessages(messages) {
   return messages.map((m) => ({
     role: m.role,
@@ -15,7 +17,7 @@ async function detectIntent(normalizedMessages) {
   const recentMessages = normalizedMessages.slice(-4);
 
   const intentResult = streamText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq(GROQ_MODEL),
     system: `You are an intent classifier for a document Q&A chat. Classify the LAST user message.
 
 Reply with ONLY a JSON object, nothing else:
@@ -100,7 +102,7 @@ IMPORTANT: Always use Markdown formatting. For tables, use Markdown pipe syntax 
     }
 
     const result = streamText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq(GROQ_MODEL),
       system: systemPrompt,
       messages: normalizedMessages,
     });
