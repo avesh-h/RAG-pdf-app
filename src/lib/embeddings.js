@@ -1,4 +1,10 @@
-import { pipeline } from "@xenova/transformers";
+import { pipeline, env } from "@xenova/transformers";
+
+// Serverless (Vercel) file system is read-only except /tmp, so download/cache
+// the model there instead of inside node_modules.
+if (process.env.VERCEL) {
+  env.cacheDir = "/tmp/transformers-cache";
+}
 
 const MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
 
