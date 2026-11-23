@@ -1,8 +1,8 @@
 import { groq } from "@ai-sdk/groq";
 import { tavily } from "@tavily/core";
-import { streamText } from "ai";
+import { generateText, streamText } from "ai";
 
-const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 // Helper: convert useChat message format → Groq format
 function normalizeMessages(messages) {
@@ -17,35 +17,48 @@ function normalizeMessages(messages) {
   }));
 }
 
-// Helper: detect if the latest message is a follow-up or a new question
+// Decide: can the last message be answered from the conversation alone,
+// or does it need fresh facts from the web? Also rewrites the message into a
+// standalone search query ("what about its price?" -> "iPhone 17 price in India").
 async function detectIntent(normalizedMessages) {
-  const recentMessages = normalizedMessages.slice(-4); // last 4 messages max
-
-  const intentResult = streamText({
-    model: groq(GROQ_MODEL),
-    system: `You are an intent classifier. Analyze the conversation and classify the LAST user message.
-
-Reply with ONLY a JSON object in this exact format, nothing else:
-{"type": "FOLLOWUP", "searchQuery": null}
-OR
-{"type": "NEW_QUESTION", "searchQuery": "<the actual search query to use>"}
-
-Rules:
-- FOLLOWUP: last message is asking for more detail, clarification, summary, rephrasing, or continuation of the previous topic. searchQuery must be null.
-- NEW_QUESTION: last message is a completely different/unrelated topic. searchQuery must be the clean search query string.`,
-    messages: recentMessages,
-  });
-
-  const text = (await intentResult.text).trim();
+  const lastMsg = normalizedMessages.at(-1)?.content ?? "";
+  const recentMessages = normalizedMessages.slice(-6);
 
   try {
+    const { text } = await generateText({
+      model: groq(GROQ_MODEL),
+      temperature: 0,
+      system: `You decide whether the LAST user message can be answered using ONLY the conversation so far, or needs a fresh web search.
+
+ANSWER_FROM_HISTORY — only when the last message works on content that is ALREADY in the previous assistant answer:
+- reformat it (table, bullets, JSON), shorten, lengthen, simplify, rephrase, translate
+- explain, summarise, or compare things the previous answer already stated
+
+SEARCH — whenever answering needs facts that are NOT already written in the previous answers:
+- new details, numbers, prices, dates, names, statistics, news, "latest", "current"
+- other items or people not covered yet
+- a different topic, OR a new aspect of the same topic (e.g. "what about its price in India?")
+
+For SEARCH, "searchQuery" must be a standalone Google-style query: replace pronouns (it, they, this, that) with the real subject from the conversation, keep needed context, drop filler words.
+
+When in doubt, choose SEARCH. A search is cheap; a wrong answer from memory is not.
+
+Reply with ONLY one JSON object, nothing else:
+{"type": "ANSWER_FROM_HISTORY", "searchQuery": null}
+OR
+{"type": "SEARCH", "searchQuery": "<standalone query>"}`,
+      messages: recentMessages,
+    });
+
     // Strip any markdown fences just in case
     const clean = text.replace(/```json|```/g, "").trim();
-    return JSON.parse(clean);
+    const intent = JSON.parse(clean);
+
+    if (intent.type === "ANSWER_FROM_HISTORY") return intent;
+    return { type: "SEARCH", searchQuery: intent.searchQuery || lastMsg };
   } catch {
-    // Fallback: treat as new question
-    const lastMsg = normalizedMessages.at(-1)?.content ?? "";
-    return { type: "NEW_QUESTION", searchQuery: lastMsg };
+    // Anything unexpected -> safest option is to search with the raw message
+    return { type: "SEARCH", searchQuery: lastMsg };
   }
 }
 
@@ -58,15 +71,20 @@ export async function POST(request) {
 
     console.log("Normalized messages:", normalizedMessages);
 
-    // Step 2 — Detect if this is a follow-up or a new question
-    const intent = await detectIntent(normalizedMessages);
+    // Step 2 — First question always searches (no history to answer from, so
+    // skip the classifier call). Later questions: decide search vs. history.
+    const isFirstQuestion =
+      normalizedMessages.filter((m) => m.role === "user").length <= 1;
+    const intent = isFirstQuestion
+      ? { type: "SEARCH", searchQuery: normalizedMessages.at(-1)?.content ?? "" }
+      : await detectIntent(normalizedMessages);
 
     console.log("Intent:", intent);
 
     let systemPrompt = "";
 
-    if (intent.type === "NEW_QUESTION") {
-      // Step 3a — New question: search Tavily with the clean query
+    if (intent.type === "SEARCH") {
+      // Step 3a — Needs fresh facts: search Tavily with the clean query
       const client = tavily({ apiKey: process.env.TAVILY_API_KEY });
       const searchResults = await client.search(intent.searchQuery, {
         maxResults: 5,
@@ -94,11 +112,12 @@ CRITICAL RULES:
 Sources:
 ${context}`;
     } else {
-      // Step 3b — Follow-up: no Tavily call, answer from conversation history
+      // Step 3b — Answerable from the conversation: no Tavily call
       systemPrompt = `You are a precise and thorough research assistant. The user is asking a follow-up question based on your previous response.
 
 CRITICAL RULES:
 - Use the conversation history to answer — do not search for new information
+- If the history does not actually contain what is needed, say so briefly instead of guessing or inventing facts
 - Be direct and specific — answer exactly what was asked
 - Match format to content: numbered steps for processes, bullets for lists, paragraphs for concepts
 - Do not repeat everything you said before — build on it
