@@ -2,7 +2,7 @@ import { searchDocuments } from "@/lib/search";
 import { groq } from "@ai-sdk/groq";
 import { streamText } from "ai";
 
-const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
 // Number of PDF chunks sent to the model with every question
 const TOP_K = 8;
